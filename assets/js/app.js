@@ -1,325 +1,373 @@
-// // D3 Scatterplot Assignment
+// D3 Interactive Scatter Plot
 
-// Using the D3 techniques we taught you in class, create a scatter plot that represents each state with circle elements. You'll code this graphic in the app.js file of your homework directory—make sure you pull in the data from data.csv by using the d3.csv function. Your scatter plot should ultimately appear like the image at the top of this section.
+// Create the scatter plot dimensions with D3.js.
+var aspect_ratio = 0.52
+var svgWidth = parseInt(d3.select('.chart').style('width'), 10) * 0.9;
+var svgHeight = svgWidth * aspect_ratio;
 
-
-// The x-values of the circles should match the demographic census data, while the y-values should represent the risk data.
-// Include state abbreviations in the circles.
-// Create and situate your axes and labels to the left and bottom of the chart.
-// Generate this chart in the d3.html file in your assignment directory.
-// Note: You'll need to use http-server to display the graphic since you're pulling data in from a source outside of your app.js file.
-
-
-
-
-
-// Students:
-// =========
-// Follow your written instructions and create a scatter plot with D3.js.
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-var svgWidth = 900;
-var svgHeight = 500;
-
-var margin = { top: 20, right: 40, bottom: 80, left: 100 };
+var margin = {
+  top: 0.04 * svgHeight,
+  right: 0.042 * svgWidth,
+  bottom: 0.12 * svgHeight,
+  left: 0.125 * svgWidth
+};
 
 var width = svgWidth - margin.left - margin.right;
 var height = svgHeight - margin.top - margin.bottom;
 
 // Create an SVG wrapper, append an SVG group that will hold our chart, and shift the latter by left and top margins.
-var svg = d3
-  .select(".chart")
+var svg = d3.select(".chart")
   .append("svg")
   .attr("width", svgWidth)
-  .attr("height", svgHeight)
-  .append("g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  .attr("height", svgHeight);
 
-// Append an SVG group
-var chart = svg.append("g");
+var chartGroup = svg.append("g")
+  .attr("transform", `translate(${margin.left}, 0)`);
 
-// Append a div to the body to create tooltips, assign it a class
-d3.select(".chart").append("div").attr("class", "tooltip").style("opacity", 0);
+// Initial Paramamters for the chart
+var chosenXAxis = "povlessHs";
+var chosenYAxis = "lessHs";
 
-// Retrieve data from the CSV file and execute everything below
-d3.csv("data.csv", function(err, myData) {
-  if (err) throw err;
-
-  myData.forEach(function(data) {
-    data.obese = Number(data.obese);
-    data.bachelorOrHigher = Number(data.bachelorOrHigher);
-    data.currentSmoker = Number(data.currentSmoker);
-  });
-
-  console.log(myData);
-
-  // Create scale functions
-  var yLinearScale = d3.scaleLinear().range([height, 0]);
-
-  var xLinearScale = d3.scaleLinear().range([0, width]);
-
-  // Create axis functions
-  var bottomAxis = d3.axisBottom(xLinearScale);
-  var leftAxis = d3.axisLeft(yLinearScale);
-
-  // Variables store minimum and maximum values in a column in data.csv
-  var xMin;
-  var xMax;
-  var yMax;
-
-  // Function identifies the minimum and maximum values in a column in data.csv
-  // and assigns them to xMin and xMax variables, which defines the axis domain
-  function findMinAndMax(dataColumnX) {
-    xMin = d3.min(myData, function(data) {
-      return Number(data[dataColumnX]) * 0.8;
-    });
-
-    xMax = d3.max(myData, function(data) {
-      return Number(data[dataColumnX]) * 1.1;
-    });
-
-    yMax = d3.max(myData, function(data) {
-      return Number(data.bachelorOrHigher) * 1.1;
-    });
+// function used for updating x-scale var upon click on axis label
+function xScale(povData, chosenXAxis) {
+  // Conditional loop to create scales
+  if (chosenXAxis === "povCollege") {
+    var xLinearScale = d3.scaleLinear()
+      .domain([0, 25])
+      .range([0, width]);
+  } else {
+    var xLinearScale = d3.scaleLinear()
+      .domain([d3.min(povData, d => d[chosenXAxis]) * 0.8,
+      d3.max(povData, d => d[chosenXAxis]) * 1.2])
+      .range([0, width]);
   }
+    
+  return xLinearScale;
 
-  // The default x-axis is 'obese'
-  // Another axis can be assigned to the variable during an onclick event.
-  var currentAxisLabelX = "obese";
+}
 
-  var currentAxisLabelY = "bachelorOrHigher";
+// function used for updating y-scale var upon click on axis label
+function yScale(povData, chosenYAxis) {
+  // create scales
+  var yLinearScale = d3.scaleLinear()
+    .domain([0, d3.max(povData, d => d[chosenYAxis] * 1.2)])
+    .range([height, 0]);
 
-  writeAnalysis(currentAxisLabelX, currentAxisLabelY);
+  return yLinearScale;
 
-  // Call findMinAndMax() with default
-  findMinAndMax(currentAxisLabelX);
+}
 
-  // Set domain of an axis to extend from min to max values of the data column
-  xLinearScale.domain([xMin, xMax]);
-  yLinearScale.domain([0, yMax]);
+// function used for updating xAxis var upon click on axis label
+function renderXAxes(newXScale, xAxis) {
+  var bottomAxis = d3.axisBottom(newXScale);
 
-  // Initializes tooltip
-  var toolTip = d3
-    .tip()
-    .attr("class", "tooltip")
-    // Define position
-    .offset([80, -60])
-    // The html() method allows mix of JS and HTML in callback function
-    .html(function(data) {
-      var itemName = data.state;
-      var itemEdu = Number(data.bachelorOrHigher);
-      var itemInfo = Number(data[currentAxisLabelX]);
-      var itemString;
-      // Tooltip text depends on which axis is active
-      if (currentAxisLabelX === "obese") {
-        itemString = "Obese: ";
-      }
-      else {
-        itemString = "Smoker: ";
-      }
-      if (currentAxisLabelY === "bachelorOrHigher") {
-        eduString = "College Grad: ";
-      }
-      else {
-        eduString = "HS Grad: ";
-      }
-      return itemName +
-        "<hr>" +
-        eduString +
-        itemEdu + "%<br>" +
-        itemString +
-        itemInfo + "%";
-    });
-
-  // Create tooltip
-  chart.call(toolTip);
-
-  chart
-    .selectAll("circle")
-    .data(myData)
-    .enter()
-    .append("circle")
-    .attr("cx", function(data, index) {
-      return xLinearScale(Number(data[currentAxisLabelX]));
-    })
-    .attr("cy", function(data, index) {
-      return yLinearScale(Number(data.bachelorOrHigher));
-    })
-    .attr("r", "12")
-    .attr("fill", "lightblue")
-    // Both circle and text instances have mouseover & mouseout event handlers
-    .on("mouseover", function(data) {
-      toolTip.show(data);})
-    .on("mouseout", function(data) {
-      toolTip.hide(data);});
-
-  chart
-    .selectAll("text")
-    .data(myData)
-    .enter()
-    .append("text")
-    .attr("text-anchor", "middle")
-    .attr("class","stateText")
-    .style("fill", "white")
-    .style("font", "10px sans-serif")
-    .style("font-weight", "bold")
-    .text(function(data) {
-      return data.abbr;})
-    .on("mouseover", function(data) {
-      toolTip.show(data);})
-    .on("mouseout", function(data) {
-      toolTip.hide(data);})
-    .attr("x", function(data, index) {
-      return xLinearScale(Number(data[currentAxisLabelX]));
-    })
-    .attr("y", function(data, index) {
-      return yLinearScale(Number(data.bachelorOrHigher))+4;
-    });
-
-  // Append an SVG group for the x-axis, then display the x-axis
-  chart
-    .append("g")
-    .attr("transform", "translate(0," + height + ")")
-    // The class name assigned here will be used for transition effects
-    .attr("class", "x-axis")
+  xAxis.transition()
+    .duration(1000)
     .call(bottomAxis);
 
-  // Append a group for y-axis, then display it
-  chart.append("g")
-    .attr("class", "y-axis")
+  return xAxis;
+}
+
+// function used for updating yAxis var upon click on axis label
+function renderYAxes(newYScale, yAxis) {
+  var leftAxis = d3.axisLeft(newYScale);
+
+  yAxis.transition()
+    .duration(1000)
     .call(leftAxis);
 
-  // Append y-axis label
-  chart
-    .append("text")
-    .attr("transform", "rotate(-90)")
-    .attr("y", 0 - margin.left + 40)
-    .attr("x", 0 - height / 2)
-    .attr("dy", "1em")
-    .attr("class", "axis-text")
-    .attr("data-axis-name", "bachelorOrHigher")
-    .text("Bachelor's Degree or Greater");
-
-  // Append x-axis labels
-  chart
-    .append("text")
-    .attr(
-      "transform",
-      "translate(" + width / 2 + " ," + (height + margin.top + 20) + ")"
-    )
-    // This axis label is active by default
-    .attr("class", "axis-text active")
-    .attr("data-axis-name", "obese")
-    .text("Obese (BMI > 30)(%)");
-
-  chart
-    .append("text")
-    .attr(
-      "transform",
-      "translate(" + width / 2 + " ," + (height + margin.top + 45) + ")"
-    )
-    // This axis label is inactive by default
-    .attr("class", "axis-text inactive")
-    .attr("data-axis-name", "currentSmoker")
-    .text("Current Smoker (%)");
-
-  // Change an axis's status from inactive to active when clicked (if it was inactive)
-  // Change the status of all active axes to inactive otherwise
-  function labelChange(clickedAxis) {
-    d3
-      .selectAll(".axis-text")
-      .filter(".active")
-      // An alternative to .attr("class", <className>) method. Used to toggle classes.
-      .classed("active", false)
-      .classed("inactive", true);
-
-    clickedAxis.classed("inactive", false).classed("active", true);
-    writeAnalysis(currentAxisLabelX, currentAxisLabelY);
-  }
-
-  d3.selectAll(".axis-text").on("click", function() {
-    // Assign a variable to current axis
-    var clickedSelection = d3.select(this);
-    // "true" or "false" based on whether the axis is currently selected
-    var isClickedSelectionInactive = clickedSelection.classed("inactive");
-    // console.log("this axis is inactive", isClickedSelectionInactive)
-    // Grab the data-attribute of the axis and assign it to a variable
-    // e.g. if data-axisName is "poverty," var clickedAxis = "poverty"
-    var clickedAxis = clickedSelection.attr("data-axis-name");
-
-    // The onclick events below take place only if the x-axis is inactive
-    // Clicking on an already active axis will therefore do nothing
-    if (isClickedSelectionInactive) {
-      // Assign the clicked axis to the variable currentAxisLabelX
-      currentAxisLabelX = clickedAxis;
-      // Call findMinAndMax() to define the min and max domain values.
-      findMinAndMax(currentAxisLabelX);
-      // Set the domain for the x-axis
-      xLinearScale.domain([xMin, xMax]);
-      // Create a transition effect for the x-axis
-      svg
-        .select(".x-axis")
-        .transition()
-        // .ease(d3.easeElastic)
-        .duration(1800)
-        .call(bottomAxis);
-
-      // Select all circles to create a transition effect, then relocate its horizontal location
-      // based on the new axis that was selected/clicked
-      d3.selectAll("circle").each(function() {
-        d3
-          .select(this)
-          .transition()
-          // .ease(d3.easeBounce)
-          .attr("cx", function(data, index) {
-            return xLinearScale(Number(data[currentAxisLabelX]));
-          })
-          .duration(1800);
-      });
-
-      d3.selectAll(".stateText").each(function() {
-        d3
-          .select(this)
-          .transition()
-          // .ease(d3.easeBounce)
-          .attr("x", function(data, index) {
-            return xLinearScale(Number(data[currentAxisLabelX]));
-          })
-          .duration(1800);
-      });
-
-      // Change the status of the axes. See above for more info on this function.
-      labelChange(clickedSelection);
-    }
-  });
-});
-
-function writeAnalysis(xAxis, yAxis) {
-  var analysisText = parent.document.getElementById('analysis');
-
-  var responses = ["There is a strong negative correlation (-0.751735757) between having at least a Bachelor's Degree and being obese.",
-                  "There is a negative correlation (-0.617179941) between having at least a Bachelor's Degree and being a current smoker.",
-                  "There is a positive correlation (0.67396584) between being a high school graduate and being obese.",
-                  "There is a strong positive correlation (0.757923374) between being a high school graduate and being a current smoker."];
-
-  var answer;
-
-  if (xAxis === "obese") {
-    if (yAxis === "bachelorOrHigher") {
-      answer = responses[0];
-    }
-    else {
-      answer = responses[2];
-    }
-  }
-  else {
-    if (yAxis === "bachelorOrHigher") {
-      answer = responses[1];
-    }
-    else {
-      answer = responses[3];
-    }
-  }
-  analysisText.innerHTML = answer;
+  return yAxis;
 }
+
+// function used for updating circles group (allCircles) with a transition to
+// new circles
+function renderCircles(allCircles, newXScale, newYScale, chosenXAxis, chosenYAxis) {
+
+  allCircles.transition()
+    .duration(1000)
+    .attr("cx", d => newXScale(d[chosenXAxis]))
+    .attr("cy", d => newYScale(d[chosenYAxis]));
+
+  return allCircles;
+}
+
+// function used for updating circles text group (allTexts) with a transition to
+// new circles
+function renderText(allText, newXScale, newYScale, chosenXAxis, chosenYAxis) {
+
+  allText.transition()
+    .duration(1000)
+    .attr("x", d => newXScale(d[chosenXAxis]))
+    .attr("y", d => newYScale(d[chosenYAxis]-0.4));
+
+  return allText;
+}
+
+// Import Data (run local hose)
+d3.csv("data/data.csv", function(err, povData) {
+    if (err) throw err; 
+
+    // Step 1: Parse Data/Cast as numbers
+    // ==============================
+    povData.forEach(function(data) {
+        data[chosenXAxis] = +data[chosenXAxis];
+        data[chosenYAxis] = +data[chosenYAxis];
+      });
+
+    // xLinearScale function above csv import
+    var xLinearScale = xScale(povData, chosenXAxis);
+
+    // yLinearScale function above csv import
+    var yLinearScale = yScale(povData, chosenYAxis);
+
+    // Step 3: Create axis functions
+    // ==============================
+    var bottomAxis = d3.axisBottom(xLinearScale);
+    var leftAxis = d3.axisLeft(yLinearScale);
+
+    // Step 4: Append Axes to the chart
+    // ==============================
+    var xAxis = chartGroup.append("g")
+    .attr("transform", `translate(0, ${height})`)
+    .call(bottomAxis);
+
+    var yAxis = chartGroup.append("g")
+    .call(leftAxis);
+    
+    // Append a group to the chart to hold the cirles and the cirlces text
+    chartGroup.append("g")
+    .classed("circles", true);
+
+    // Step 5: Create Circles and Circles Text
+    // ==============================
+    var circlesGroup = d3.select(".circles");
+
+    var allCircles = circlesGroup.selectAll("circles")
+    .data(povData)
+    .enter()
+    .append("circle")
+    .attr("cx", d => xLinearScale(d[chosenXAxis]))
+    .attr("cy", d => yLinearScale(d[chosenYAxis]))
+    .attr("r", "15")
+    .attr("fill", "lightblue")
+    .attr("stroke", "black");
+
+    var allText = circlesGroup.selectAll("text")
+    .data(povData)
+    .enter()
+    .append("text")
+    .attr("x", d => xLinearScale(d[chosenXAxis]))
+    .attr("y", d => yLinearScale(d[chosenYAxis]-0.4))
+    .attr("text-anchor", "middle")
+    .attr("fill", "black")
+    .attr("stroke-width", "3")
+    .text(d => d.abbr);
+
+    // Step 6: Initialize tool tip with current x and y axis values
+    // ==============================
+    var toolTip = d3.tip()
+    .attr("class", "tooltip")
+    .attr("position", "absolute")
+    .attr("color", "blue")
+    .html(d => `${d.state}<br>Poverty: ${d[chosenYAxis]}%<br>Population: ${d[chosenXAxis]}%`);
+
+    // Step 7: Create tooltip in the chart
+    // ==============================
+    chartGroup.call(toolTip);
+
+    // Step 8: Create event listeners to display and hide the tooltip
+    // ==============================
+    allText.on("click", function(data) {
+    toolTip.show(data);
+    })
+    // onmouseout event
+    .on("mouseout", function(data, index) {
+      toolTip.hide(data);
+    });
+
+    // Create group for  3 x- axis labels
+    var labelsGroupX = chartGroup.append("g")
+    .attr("transform", `translate(${width / 2}, ${height + 0.03 * svgHeight})`);
+
+    var povlessHsLabel = labelsGroupX.append("text")
+    .attr("x", 0)
+    .attr("y", 0.05 * svgHeight)
+    .attr("class", "axisText")
+    .attr("value", "povlessHs") // value to grab for event listener
+    .classed("active", true)
+    .text("Poverty % - less than HS Eductation");
+
+    var povHsLabel = labelsGroupX.append("text")
+    .attr("x", 0)
+    .attr("y", 0.09 * svgHeight)
+    .attr("class", "axisText")
+    .attr("value", "povHsGed") // value to grab for event listener
+    .classed("inactive", true)
+    .text("Poverty % - HS Eductation");
+
+    var povCollegeLabel = labelsGroupX.append("text")
+    .attr("x", 0)
+    .attr("y", 0.13 * svgHeight)
+    .attr("class", "axisText")
+    .attr("value", "povCollege") // value to grab for event listener
+    .classed("inactive", true)
+    .text("Poverty % - College Eductation");
+
+    // Create group for  3 y- axis labels
+    var labelsGroupY = chartGroup.append("g")
+    .attr("transform", `translate(${0 - (height / 2)}, ${0 - margin.left + (0.042 * svgWidth)})`);
+
+    var lessHsLabel = labelsGroupY.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0.17 * svgWidth)
+    .attr("x", -0.56 * svgHeight)
+    .attr("dy", "1em")
+    .attr("class", "axisText")
+    .attr("value", "lessHs") // value to grab for event listener
+    .classed("active", true)
+    .text("Pop % - less than HS Education");
+
+    var hsLabel = labelsGroupY.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0.15 * svgWidth)
+    .attr("x", -0.56 * svgHeight)
+    .attr("dy", "1em")
+    .attr("class", "axisText")
+    .attr("value", "hsGed") // value to grab for event listener
+    .classed("inactive", true)
+    .text("Pop % - HS Education");
+
+    var collegeLabel = labelsGroupY.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", 0.13 * svgWidth)
+    .attr("x", -0.56 * svgHeight)
+    .attr("dy", "1em")
+    .attr("class", "axisText")
+    .attr("value", "college") // value to grab for event listener
+    .classed("inactive", true)
+    .text("Pop % - College Education");
+
+    // x axis labels event listener
+    labelsGroupX.selectAll("text")
+    .on("click", function() {
+      // get value of selection
+      var value = d3.select(this).attr("value");
+      if (value !== chosenXAxis) {
+
+        // replaces chosenXAxis with value
+        chosenXAxis = value;
+
+        console.log(chosenXAxis)
+
+        // functions here found above csv import
+        // updates x scale for new data
+        xLinearScale = xScale(povData, chosenXAxis);
+
+        // updates x axis with transition
+        xAxis = renderXAxes(xLinearScale, xAxis);
+
+        // updates circles with new x values (and currnt y values)
+        allCircles = renderCircles(allCircles, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+
+        // updates circles with new x values (and current y values)
+        allText = renderText(allText, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+
+        // changes classes to change bold text for chosen x axis
+        if (chosenXAxis === "povlessHs") {
+          povlessHsLabel
+            .classed("active", true)
+            .classed("inactive", false);
+          povHsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          povCollegeLabel
+            .classed("active", false)
+            .classed("inactive", true);
+        }
+        else if (chosenXAxis === "povHsGed") {
+          povlessHsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          povHsLabel
+            .classed("active", true)
+            .classed("inactive", false);
+          povCollegeLabel
+            .classed("active", false)
+            .classed("inactive", true);
+        }
+        else {
+          povlessHsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          povHsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          povCollegeLabel
+            .classed("active", true)
+            .classed("inactive", false);
+        }
+      }
+    });
+
+    // y axis labels event listener
+    labelsGroupY.selectAll("text")
+    .on("click", function() {
+      // get value of selection
+      var value = d3.select(this).attr("value");
+      if (value !== chosenYAxis) {
+
+        // replaces chosenYAxis with value
+        chosenYAxis = value;
+
+        console.log(chosenYAxis)
+
+        // functions here found above csv import
+        // updates y scale for new data
+        yLinearScale = yScale(povData, chosenYAxis);
+
+        // updates y axis with transition
+        yAxis = renderYAxes(yLinearScale, yAxis);
+
+        // updates circles with new y values (and current x values)
+        allCircles = renderCircles(allCircles, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+
+        // updates circles with new x values (and current x values)
+        allText = renderText(allText, xLinearScale, yLinearScale, chosenXAxis, chosenYAxis);
+
+        // changes classes to change bold text for chosen y axis
+        if (chosenYAxis === "lessHs") {
+          lessHsLabel
+            .classed("active", true)
+            .classed("inactive", false);
+          hsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          collegeLabel
+            .classed("active", false)
+            .classed("inactive", true);
+        }
+        else if (chosenYAxis === "hsGed") {
+          lessHsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          hsLabel
+            .classed("active", true)
+            .classed("inactive", false);
+          collegeLabel
+            .classed("active", false)
+            .classed("inactive", true);
+        }
+        else {
+          lessHsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          hsLabel
+            .classed("active", false)
+            .classed("inactive", true);
+          collegeLabel
+            .classed("active", true)
+            .classed("inactive", false);
+        }
+      }
+    });
+});
