@@ -2,91 +2,62 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fun with D3</title>
+  <meta charset="UTF-8">
+  <title>D3Times</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
+    crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+    crossorigin="anonymous">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/d3Style.css">
 
-    <!-- CSS and Styling-->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://bootswatch.com/4/journal/bootstrap.min.css">
-    <link href="https://fonts.googleapis.com/css?family=Amatic+SC" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/style.css">
-
-    <!-- JS -->
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.min.js"></script>
 </head>
 
 <body>
-    <div class="container">
-        <div class="row">
-            <div class="jumbotron text-center">
-                <h1 class="display-3">D3 Times!</h1>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="latest">
-                    <h4>Latest</h4>
-                    <hr>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4><strong>Poverty Education Levels in the United States </strong></h4>
-                    </div>
-                    <div class="panel-body">
-                        <p>Poverty levels in the United States can be broken down into groups based on how much education an individual receives. The chart above shows the poverty level percentage (per level of education) versus the population percentage (per level of education) in each state.*</p>
-                        <p>This chart shows that there is a positive correlation between poverty level and population percentage for each level of education displayed. However, the overall poverty level is made up mostly of individuals with a high school education or less.</p>
-                        <!-- <p>...</p> -->
-                    </div>
-                </div>
-                <!-- panel -->
-            </div>
-            <!-- column -->
-            <div class="col-lg-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4><strong>cont..</strong></h4>
-                    </div>
-                    <div class="panel-body">
-                        <p>* While the chart is interactive, it displays the most useful data when the poverty level and population are selected for the same level of education.</p>
-                        <p>^ The poverty data for this analysis was obtained from the 2014 American Community Survey 1-Year Estimates on factfinder.census.gov for “Poverty Status in the Past 12 Months of Individuals by Educational Attainment”.</p>
-                        <p>^ The population data (per state) for this analysis was obtained from the BRFSS 2014 Overall Data from the CDCP and specifically for the question “What is the highest grade or year of school you completed?”.</p>
-                    </div>
-                </div>
-                <!-- panel -->
-            </div>
-            <!-- column -->
-        </div>
-        <!-- row -->
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="embed-responsiver">
-                    <div class='container_chart_1'>
-                        <iframe src='d3.html' frameborder='0' scrolling='no' id='iframe_chart_1'>
-                        </iframe>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12 col-md-12">
+        <h1>D3Times</h1>
+      </div>
     </div>
-
-    <footer class="footer">
-        <div class="container text-center" style="padding: 20px;">
-            <span>D3 Times - 2018</span>
+    <div class="row">
+      <div class="col-xs-12  col-md-9">
+        <div id="scatter">
+          <!-- We append our chart here. -->
         </div>
-    </footer>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12  col-md-9">
+        <div class="article">
+          <h2>Correlations Discovered Between Health Risks and Age, Income</h2>
+          <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor
+            quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean
+            ultricies mi vitae est. Mauris placerat eleifend leo.</p>
 
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+          <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor
+            quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean
+            ultricies mi vitae est. Mauris placerat eleifend leo.</p>
+
+          <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor
+            quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean
+            ultricies mi vitae est. Mauris placerat eleifend leo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer-->
+  <div id="footer">
+    <p>The Coding Boot Camp&copy;2016</p>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.5.0/d3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.9.1/d3-tip.js"></script>
+  <script type="text/javascript" src="assets/js/app.js"></script>
 
 </body>
 
